@@ -21,8 +21,9 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(urlencoded({ extended: true }));
 const corsOptions = {
-    origin: process.env.URL || "https://nexagram-front.vercel.app",
-    credentials: true
+    origin: ["https://nexagram-front.vercel.app"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }
 app.use(cors(corsOptions));
 // console.log("CORS origin:", process.env.URL);
