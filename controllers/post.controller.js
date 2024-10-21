@@ -46,6 +46,7 @@ export const addNewPost = async (req, res) => {
     }
 }
 export const getAllPost = async (req, res) => {
+    console.log("get all posts is called ===>")
     try {
         // const postss = await Post.find()
         const posts = await Post.find().sort({ createdAt: -1 })

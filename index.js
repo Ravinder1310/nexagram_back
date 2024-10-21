@@ -22,6 +22,7 @@ app.use(cookieParser());
 app.use(urlencoded({ extended: true }));
 const corsOptions = {
     origin: process.env.URL || "https://nexagram-front.vercel.app",
+    // origin: process.env.URL || "http://localhost:5173",
     credentials: true
 }
 app.use(cors(corsOptions));
