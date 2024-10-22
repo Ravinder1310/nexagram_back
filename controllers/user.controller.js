@@ -34,6 +34,11 @@ export const register = async (req, res) => {
         console.log(error);
     }
 }
+
+
+
+
+
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -78,12 +83,14 @@ export const login = async (req, res) => {
             bio: user.bio,
             followers: user.followers,
             following: user.following,
-            posts: populatedPosts
+            posts: populatedPosts,
+            token
         }
         return res.cookie('token', token, { httpOnly: true, sameSite: 'strict', maxAge: 1 * 24 * 60 * 60 * 1000 }).json({
             message: `Welcome back ${user.username}`,
             success: true,
             user
+            
         });
 
     } catch (error) {

@@ -8,25 +8,50 @@ import { getReceiverSocketId, io } from "../socket/socket.js";
 export const addNewPost = async (req, res) => {
     try {
         const { caption } = req.body;
-        const image = req.file;
-        const authorId = req.id;
+        const media = req.file; // Fetch the media file from req.file
+        const authorId = req.id; // Assuming req.id contains the author ID from middleware
 
-        if (!image) return res.status(400).json({ message: 'Image required' });
+        if (!media) {
+            return res.status(400).json({ message: 'Media required' });
+        }
 
-        // image upload 
-        const optimizedImageBuffer = await sharp(image.buffer)
-            .resize({ width: 800, height: 800, fit: 'inside' })
-            .toFormat('jpeg', { quality: 80 })
-            .toBuffer();
+        let mediaUrl;
+        let mediaType;
 
-        // buffer to data uri
-        const fileUri = `data:image/jpeg;base64,${optimizedImageBuffer.toString('base64')}`;
-        const cloudResponse = await cloudinary.uploader.upload(fileUri);
+        // Handle image or video upload
+        if (media.mimetype.startsWith('image/')) {
+            const fileUri = `data:${media.mimetype};base64,${media.buffer.toString('base64')}`;
+            const cloudResponse = await cloudinary.uploader.upload(fileUri);
+            mediaUrl = cloudResponse.secure_url;
+            mediaType = 'image';
+        } else if (media.mimetype.startsWith('video/')) {
+            const cloudResponse = await new Promise((resolve, reject) => {
+                const uploadStream = cloudinary.uploader.upload_stream(
+                    { resource_type: "video" },
+                    (error, result) => {
+                        if (error) reject(error);
+                        resolve(result);
+                    }
+                );
+                uploadStream.end(media.buffer); // Pass the buffer directly to the upload stream
+            });
+            mediaUrl = cloudResponse.secure_url;
+            mediaType = 'video';
+        }
+
+        console.log('mediaUrl:', mediaUrl); // Log mediaUrl to check its value
+        if (!mediaUrl) {
+            return res.status(400).json({ message: 'Failed to upload media' });
+        }
+
+        // Create the post with the media URL
         const post = await Post.create({
             caption,
-            image: cloudResponse.secure_url,
-            author: authorId
+            media: mediaUrl,  // Ensure mediaUrl is assigned correctly
+            mediaType,        // Also add mediaType for distinction
+            author: authorId,
         });
+
         const user = await User.findById(authorId);
         if (user) {
             user.posts.push(post._id);
@@ -39,15 +64,16 @@ export const addNewPost = async (req, res) => {
             message: 'New post added',
             post,
             success: true,
-        })
-
+        });
     } catch (error) {
         console.log(error);
+        return res.status(500).json({ message: 'Server error' });
     }
-}
+};
+
+
 export const getAllPost = async (req, res) => {
     try {
-        // const postss = await Post.find()
         const posts = await Post.find().sort({ createdAt: -1 })
             .populate({ path: 'author', select: 'username profilePicture' })
             .populate({
@@ -59,8 +85,9 @@ export const getAllPost = async (req, res) => {
                 }
             });
 
-            // console.log("posts ==>",posts);
-            
+        // Log the retrieved posts for debugging (optional)
+        // console.log("posts ==>", posts);
+        
         return res.status(200).json({
             posts,
             success: true
@@ -77,25 +104,30 @@ export const getAllPost = async (req, res) => {
 export const getUserPost = async (req, res) => {
     try {
         const authorId = req.id;
-        const posts = await Post.find({ author: authorId }).sort({ createdAt: -1 }).populate({
-            path: 'author',
-            select: 'username, profilePicture'
-        }).populate({
-            path: 'comments',
-            sort: { createdAt: -1 },
-            populate: {
-                path: 'author',
-                select: 'username, profilePicture'
-            }
-        });
+        const posts = await Post.find({ author: authorId }).sort({ createdAt: -1 })
+            .populate({ path: 'author', select: 'username profilePicture' })
+            .populate({
+                path: 'comments',
+                sort: { createdAt: -1 },
+                populate: {
+                    path: 'author',
+                    select: 'username profilePicture'
+                }
+            });
+
         return res.status(200).json({
             posts,
             success: true
-        })
+        });
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            success: false,
+            message: "Server Error"
+        });
     }
-}
+};
+
 export const likePost = async (req, res) => {
     try {
         const likeKrneWalaUserKiId = req.id;
@@ -129,6 +161,34 @@ export const likePost = async (req, res) => {
 
     }
 }
+
+
+export const postView = async (req,res) => {
+    // console.log("hel ====>");
+    
+    const postId = req.params.id;
+    const userId = req.body.user._id; // assuming you have user ID in request
+
+    try {
+        const post = await Post.findById(postId);
+
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found' });
+        }
+
+        if (!post.viewers.includes(userId.toString())) {
+            post.views += 1;
+            post.viewers.push(userId.toString());
+            await post.save();
+        }
+
+        return res.status(200).json({ success: true, views: post.views });
+    } catch (error) {
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
+
+
 export const dislikePost = async (req, res) => {
     try {
         const likeKrneWalaUserKiId = req.id;
