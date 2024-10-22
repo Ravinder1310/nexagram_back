@@ -21,7 +21,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(urlencoded({ extended: true }));
 const corsOptions = {
-    origin: process.env.URL || "https://nexagram-front.vercel.app",
+    origin: process.env.URL || "https://sumitnexfront.vercel.app",
     // origin: process.env.URL || "http://localhost:5173",
     credentials: true
 }
