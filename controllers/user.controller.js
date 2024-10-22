@@ -88,7 +88,10 @@ export const login = async (req, res) => {
             posts: populatedPosts
         }
 
-        return res.cookie('token', token, { httpOnly: true, sameSite: 'Lax', maxAge: 1 * 24 * 60 * 60 * 1000 }).json({
+        return res.cookie('token', token, { httpOnly: true,  
+            sameSite: 'None',
+            secure: true, 
+            maxAge: 1 * 24 * 60 * 60 * 1000 }).json({
             message: `Welcome back ${user.username}`,
             success: true,
             user
