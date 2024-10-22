@@ -91,9 +91,9 @@ export const login = async (req, res) => {
         console.log("before token set login token ==>",token)
 
         return res.cookie('token', token, {
-             httpOnly: true,  
-            // sameSite: 'None',  // Default behavior
-            // secure: false, 
+            httpOnly: true,  
+            sameSite: 'Lux',  // Default behavior
+            secure: false, 
             maxAge: 1 * 24 * 60 * 60 * 1000 }).json({
             message: `Welcome back ${user.username}`,
             success: true,
