@@ -88,6 +88,8 @@ export const login = async (req, res) => {
             posts: populatedPosts
         }
 
+        console.log("before token set login token ==>",token)
+
         return res.cookie('token', token, { httpOnly: true,  
             sameSite: 'Lax',  // Default behavior
             secure: false, 
