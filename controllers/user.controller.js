@@ -40,6 +40,9 @@ export const register = async (req, res) => {
 
 
 export const login = async (req, res) => {
+
+
+    console.log("ligin called ")
     try {
         const { email, password } = req.body;
         if (!email || !password) {
@@ -62,9 +65,10 @@ export const login = async (req, res) => {
                 success: false,
             });
         };
-
-        const token = await jwt.sign({ userId: user._id }, process.env.SECRET_KEY, { expiresIn: '1d' });
-
+        
+        const token =  jwt.sign({ userId: user._id }, process.env.SECRET_KEY, { expiresIn: '1d' });
+        
+        console.log("login token==>",token)
         // populate each post if in the posts array
         const populatedPosts = await Promise.all(
             user.posts.map( async (postId) => {
@@ -86,7 +90,14 @@ export const login = async (req, res) => {
             posts: populatedPosts,
             token
         }
-        return res.cookie('token', token, { httpOnly: true, sameSite: 'strict', maxAge: 1 * 24 * 60 * 60 * 1000 }).json({
+
+        console.log("before token set login token ==>",token)
+
+        return res.cookie('token', token, {
+            httpOnly: true,  
+            sameSite: 'strict',  // Default behavior
+            // secure: false, 
+            maxAge: 1 * 24 * 60 * 60 * 1000 }).json({
             message: `Welcome back ${user.username}`,
             success: true,
             user
@@ -97,6 +108,10 @@ export const login = async (req, res) => {
         console.log(error);
     }
 };
+
+
+
+
 export const logout = async (_, res) => {
     try {
         return res.cookie("token", "", { maxAge: 0 }).json({

@@ -12,7 +12,7 @@ import path from "path";
 dotenv.config();
 
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5057;
 
 const __dirname = path.resolve();
 
@@ -33,10 +33,10 @@ app.use("/api/v1/post", postRoute);
 app.use("/api/v1/message", messageRoute);
 
 
-app.use(express.static(path.join(__dirname, "/frontend/dist")));
-app.get("*", (req,res)=>{
-    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
-})
+// app.use(express.static(path.join(__dirname, "/frontend/dist")));
+// app.get("*", (req,res)=>{
+//     res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+// })
 
 
 server.listen(PORT, () => {
