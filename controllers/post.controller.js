@@ -73,7 +73,7 @@ export const addNewPost = async (req, res) => {
 
 
 export const getAllPost = async (req, res) => {
-    console.log("get all posts is called ===>")
+    // console.log("get all posts is called ===>")
     try {
         const posts = await Post.find().sort({ createdAt: -1 })
             .populate({ path: 'author', select: 'username profilePicture' })

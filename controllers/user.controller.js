@@ -200,6 +200,37 @@ export const getSuggestedUsers = async (req, res) => {
         console.log(error);
     }
 };
+
+
+export const isFollowing = async (req, res) => {
+    try {
+      const { userId } = req.params; // User to check if they are being followed
+      const currentUserId = req.userId; // Correctly access the current user ID
+      console.log('Current User ID:', currentUserId);
+      console.log('Current User:', userId);
+
+  
+      // Find the current user in the database
+      const currentUser = await User.findById(currentUserId);
+      if (!currentUser) {
+        return res.status(404).json({ success: false, message: 'User not found.' });
+      }
+  
+      // Check if the current user is in the followers list of the user being checked
+      const isFollowed = currentUser.following.includes(userId);
+  
+      return res.status(200).json({
+        success: true,
+        isFollowing: isFollowed,
+      });
+    } catch (error) {
+      console.error("Error in isFollowing:", error);
+      return res.status(500).json({ success: false, message: 'Server error.' });
+    }
+  };
+  
+
+
 export const followOrUnfollow = async (req, res) => {
     try {
         const followKrneWala = req.id; // patel
