@@ -152,15 +152,17 @@ export const getAllUsers = async (req, res) => {
 export const editProfile = async (req, res) => {
     try {
         const userId = req.id;
-        const { bio, gender } = req.body;
+        const { bio, gender, username } = req.body;  // Destructure username from request body
         const profilePicture = req.file;
         let cloudResponse;
 
+        // Handle profile picture upload if provided
         if (profilePicture) {
             const fileUri = getDataUri(profilePicture);
             cloudResponse = await cloudinary.uploader.upload(fileUri);
         }
 
+        // Find the user by ID, excluding password field
         const user = await User.findById(userId).select('-password');
         if (!user) {
             return res.status(404).json({
@@ -168,22 +170,45 @@ export const editProfile = async (req, res) => {
                 success: false
             });
         };
+
+        // Check if the username is provided and update it
+        if (username) {
+            const existingUser = await User.findOne({ username });
+            if (existingUser && existingUser._id.toString() !== userId) {
+                return res.status(400).json({
+                    message: 'Username is already taken.',
+                    success: false
+                });
+            }
+            user.username = username;
+        }
+
+        // Update bio, gender, and profile picture if provided
         if (bio) user.bio = bio;
         if (gender) user.gender = gender;
         if (profilePicture) user.profilePicture = cloudResponse.secure_url;
 
+        // Save updated user data
         await user.save();
 
+        // Respond with success
         return res.status(200).json({
-            message: 'Profile updated.',
+            message: 'Profile updated successfully.',
             success: true,
             user
         });
 
     } catch (error) {
         console.log(error);
+        return res.status(500).json({
+            message: 'Something went wrong.',
+            success: false
+        });
     }
 };
+
+
+
 export const getSuggestedUsers = async (req, res) => {
     try {
         const suggestedUsers = await User.find({ _id: { $ne: req.id } }).select("-password");
